@@ -1,0 +1,480 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package GUI;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import javax.swing.JOptionPane;
+/**
+ *
+ * @author rpacu
+ */
+public class ViewAllRequestJframe extends javax.swing.JFrame {
+    private DefaultTableModel model;
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ViewAllRequestJframe.class.getName());
+
+    /**
+     * Creates new form ViewAllRequestJframe
+     */
+    public ViewAllRequestJframe() {
+        initComponents();
+
+      model = new DefaultTableModel(
+        new Object[]{
+            "Request ID",
+            "Resident Name",
+            "Contact Number",
+            "Document Requested",
+            "Date Needed",
+            "Time Needed",
+            "Reason",
+            "Status",
+            "Comment"
+        }, 0
+    ) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+
+    jTable1.setModel(model);
+    jTable1.setSelectionMode(
+        ListSelectionModel.SINGLE_SELECTION
+    );
+
+    jButton1.addActionListener(e -> updateSelectedRequest("Approved"));
+    jButton2.addActionListener(e -> updateSelectedRequest("Rejected"));
+
+    loadRequests();
+
+    setLocationRelativeTo(null);
+    setExtendedState(JFrame.MAXIMIZED_BOTH);
+    
+    }
+    
+private void loadRequests() {
+   model.setRowCount(0);
+
+    String url = "jdbc:mysql://localhost:3306/"
+            + "barangaycugmanonlinedocumentrequestforms";
+
+    String sql = "SELECT request_id, Residentname, contactnumber, "
+        + "document, `date`, `time`, reason, status, comment "
+        + "FROM requestform "
+        + "WHERE is_archived = 0 "
+        + "ORDER BY request_id DESC";
+    
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        try (java.sql.Connection conn =
+                java.sql.DriverManager.getConnection(url, "root", "");
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getInt("request_id"),
+                    rs.getString("Residentname"),
+                    rs.getString("contactnumber"),
+                    rs.getString("document"),
+                    rs.getString("date"),
+                    rs.getString("time"),
+                    rs.getString("reason"),
+                    rs.getString("status"),
+                    rs.getString("comment")
+                });
+            }
+        }
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Unable to load requests:\n" + ex.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+    }
+
+    private void updateSelectedRequest(String newStatus) {
+
+       int selectedRow = jTable1.getSelectedRow();
+
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(
+                this, "Please select a request first.");
+        return;
+    }
+
+    int row = jTable1.convertRowIndexToModel(selectedRow);
+    int requestId = Integer.parseInt(
+            model.getValueAt(row, 0).toString());
+
+    String comment = txtAdminComment.getText().trim();
+
+    if (comment.isEmpty()) {
+        JOptionPane.showMessageDialog(
+                this, "Please enter an admin comment.");
+        txtAdminComment.requestFocus();
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(
+            this,
+            "Update request status to " + newStatus + "?",
+            "Confirm Decision",
+            JOptionPane.YES_NO_OPTION
+    );
+
+    if (confirm != JOptionPane.YES_OPTION) {
+        return;
+    }
+
+    String url = "jdbc:mysql://localhost:3306/"
+            + "barangaycugmanonlinedocumentrequestforms";
+
+    String sql = "UPDATE requestform "
+            + "SET status = ?, comment = ? "
+            + "WHERE request_id = ?";
+
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        try (java.sql.Connection conn =
+                java.sql.DriverManager.getConnection(url, "root", "");
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newStatus);
+            ps.setString(2, comment);
+            ps.setInt(3, requestId);
+
+            int updated = ps.executeUpdate();
+
+            if (updated > 0) {
+                JOptionPane.showMessageDialog(
+                        this, "Request updated successfully!");
+
+                txtAdminComment.setText("");
+                loadRequests();
+            } else {
+                JOptionPane.showMessageDialog(
+                        this, "Request not found in the database.");
+            }
+
+        }
+
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Unable to update request:\n" + ex.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+    }
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
+        btnExit = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        txtAdminComment = new javax.swing.JTextField();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
+        btnarchive = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setBackground(new java.awt.Color(0, 51, 153));
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jPanel1.setBackground(new java.awt.Color(255, 153, 0));
+
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        jLabel2.setText("VIEW ALL REQUEST");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(512, 512, 512)
+                .addComponent(jLabel2)
+                .addContainerGap(517, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(39, Short.MAX_VALUE)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(22, 22, 22))
+        );
+
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, 100));
+
+        jPanel2.setBackground(new java.awt.Color(0, 51, 153));
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "Resident_ID", "Resident Name", "Document Requested", "Date Needed", "Time Needed", "Reason", "Status", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jTable1.addAncestorListener(new javax.swing.event.AncestorListener() {
+            public void ancestorAdded(javax.swing.event.AncestorEvent evt) {
+                jTable1AncestorAdded(evt);
+            }
+            public void ancestorMoved(javax.swing.event.AncestorEvent evt) {
+            }
+            public void ancestorRemoved(javax.swing.event.AncestorEvent evt) {
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
+
+        btnExit.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        btnExit.setText("Exit");
+        btnExit.addActionListener(this::btnExitActionPerformed);
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel1.setText("Admin Comment:");
+
+        jButton1.setBackground(new java.awt.Color(0, 153, 51));
+        jButton1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButton1.setForeground(new java.awt.Color(255, 255, 255));
+        jButton1.setText("Approved");
+
+        jButton2.setBackground(new java.awt.Color(204, 0, 0));
+        jButton2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButton2.setForeground(new java.awt.Color(255, 255, 255));
+        jButton2.setText("Rejected");
+        jButton2.addActionListener(this::jButton2ActionPerformed);
+
+        btnarchive.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnarchive.setText("Archive");
+        btnarchive.addActionListener(this::btnarchiveActionPerformed);
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(244, 244, 244)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtAdminComment, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 411, Short.MAX_VALUE)
+                .addComponent(btnarchive, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(60, 60, 60)
+                .addComponent(btnExit, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(55, 55, 55))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 287, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtAdminComment, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButton2)))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(34, 34, 34)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnExit, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnarchive, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        getContentPane().add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 100, 1213, -1));
+
+        pack();
+        setLocationRelativeTo(null);
+    }// </editor-fold>                        
+    
+    private void btnExitActionPerformed(java.awt.event.ActionEvent evt) {                                        
+        AdminMenuJFrame Admin = new AdminMenuJFrame();
+        Admin.setVisible(true);
+        Admin.setLocationRelativeTo(null);
+
+    this.dispose();
+    }                                       
+
+    private void jTable1AncestorAdded(javax.swing.event.AncestorEvent evt) {                                      
+        // TODO add your handling code here:
+    }                                     
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+    }                                        
+
+    private void btnarchiveActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        int selectedRow = jTable1.getSelectedRow();
+
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Please select the request you want to archive."
+        );
+        return;
+    }
+
+    int modelRow =
+            jTable1.convertRowIndexToModel(selectedRow);
+
+    Object idValue =
+            jTable1.getModel().getValueAt(modelRow, 0);
+
+    if (idValue == null) {
+        JOptionPane.showMessageDialog(
+                this, "Request ID is missing."
+        );
+        return;
+    }
+
+    int requestId =
+            Integer.parseInt(idValue.toString());
+
+    int confirm = JOptionPane.showConfirmDialog(
+            this,
+            "Archive the selected request (ID: "
+                    + requestId + ")?",
+            "Confirm Archive",
+            JOptionPane.YES_NO_OPTION
+    );
+
+    if (confirm != JOptionPane.YES_OPTION) {
+        return;
+    }
+
+    String url = "jdbc:mysql://localhost:3306/"
+            + "barangaycugmanonlinedocumentrequestforms";
+
+    String sql = "UPDATE requestform "
+            + "SET is_archived = 1 "
+            + "WHERE request_id = ? "
+            + "AND is_archived = 0";
+
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        try (Connection connection =
+                DriverManager.getConnection(
+                        url, "root", "");
+             PreparedStatement pst =
+                connection.prepareStatement(sql)) {
+
+            pst.setInt(1, requestId);
+
+            int updated = pst.executeUpdate();
+
+            if (updated > 0) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Selected request archived successfully!"
+                );
+
+                // Remove archived request from active table
+                loadRequests();
+
+            } else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Request not found or already archived."
+                );
+            }
+        }
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Archive failed:\n" + e.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
+    }                                          
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(() -> new ViewAllRequestJframe().setVisible(true));
+    }
+
+    // Variables declaration - do not modify                     
+    private javax.swing.JButton btnExit;
+    private javax.swing.JButton btnarchive;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
+    private javax.swing.JTextField txtAdminComment;
+    // End of variables declaration                   
+   
+    }
